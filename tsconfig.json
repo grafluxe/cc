@@ -1,0 +1,27 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "noImplicitReturns": true,
+    "noImplicitOverride": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noUncheckedIndexedAccess": true,
+    "noEmitOnError": true,
+    "exactOptionalPropertyTypes": true,
+    "checkJs": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "importsNotUsedAsValues": "error",
+    "allowJs": true,
+    "allowUnusedLabels": false,
+    "allowUnreachableCode": false,
+    "removeComments": true,
+    "sourceMap": true,
+
+    "target": "ES6",
+    "outDir": "dist"
+  }
+}
