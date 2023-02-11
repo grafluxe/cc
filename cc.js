@@ -19,7 +19,7 @@ const fail = (msg) => {
 
 const run = (exe, isDryrun, options) => {
   if (isDryrun) {
-    console.log(`\nGit Command\n===========\n${exe}\n`);
+    console.log(`\nExecutable\n==========\n${exe}\n`);
     return "";
   }
 
@@ -162,13 +162,11 @@ const handleImport = (configs, isDryrun) => {
       );
     });
 
-    if (isDryrun) {
-      return;
+    if (!isDryrun) {
+      rmSync("cc.js", { force: true });
+      rmSync("README.md", { force: true });
+      rmSync(".git", { force: true, recursive: true });
     }
-
-    rmSync("cc.js", { force: true });
-    rmSync("README.md", { force: true });
-    rmSync(".git", { force: true, recursive: true });
   } catch {
     fail("There was a problem importing your config");
   }

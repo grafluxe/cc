@@ -11,7 +11,7 @@ node cc [-l] [-d] [-i] [-n] [<config-names>]
 ### Available Options
 
 - `-l` (list): Lists available configs
-- `-d` (dryrun): Outputs the git commands to run (without actually running them)
+- `-d` (dryrun): Outputs the executables (without actually running them)
 - `-i` (import): Imports available configs (accepts a space delimited list)
 - `-n` (new): Adds a new config branch
 
