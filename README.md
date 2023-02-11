@@ -23,7 +23,7 @@ Regarding configs with `package.json` files:
   - Many of your `package.json`s will only need `scripts` and/or `dev/dependencies` objects
 - To avoid file collisions, `package.json` files should have unique names following a `package.{unique-name}.json` pattern
   - Example: `package.eslint.json`
-- If 2 or more `package.{unique-name}.json`s have been imported, `cc` will merge them into a single `package.combined.json` so that you can more easily manually merge into an existing project's `package.json`
+- Once `package.{unique-name}.json`s have been imported, `cc` will merge them into a single `package.json` and run `npm init`
 
 ## Dependencies
 

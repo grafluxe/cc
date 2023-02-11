@@ -17,13 +17,13 @@ const fail = (msg) => {
   exit(1);
 };
 
-const run = (exe, isDryrun) => {
+const run = (exe, isDryrun, options) => {
   if (isDryrun) {
     console.log(`\nGit Command\n===========\n${exe}\n`);
     return "";
   }
 
-  return execSync(exe).toString();
+  return execSync(exe, options).toString();
 };
 
 const validateCwd = () => {
@@ -105,31 +105,30 @@ const mergePackages = (packages, out = {}) => {
   return out;
 };
 
-const createPackageJsons = () => {
+const createPackageJsons = (isDryrun) => {
   try {
     const packageNames = readdirSync(".").filter((file) =>
       /^package\..+\.json$/.test(file)
     );
 
-    if (packageNames.length <= 1) {
-      return;
+    if (packageNames.length >= 1) {
+      const packages = packageNames.map((package) =>
+        JSON.parse(readFileSync(package, "utf-8"))
+      );
+
+      const mergedPackage = mergePackages(packages);
+
+      writeFileSync("package.json", JSON.stringify(mergedPackage, null, 2));
+
+      packageNames.map((package) => rmSync(package));
     }
-
-    const packages = packageNames.map((package) =>
-      JSON.parse(readFileSync(package, "utf-8"))
-    );
-
-    const mergedPackage = mergePackages(packages);
-
-    writeFileSync(
-      "package.combined.json",
-      JSON.stringify(mergedPackage, null, 2)
-    );
-
-    packageNames.map((package) => rmSync(package));
   } catch {
     fail("There was a problem merging your npm packages");
   }
+
+  try {
+    run("npm init", isDryrun, { stdio: "inherit" });
+  } catch {}
 };
 
 const handleList = (isDryrun) => {
@@ -174,7 +173,7 @@ const handleImport = (configs, isDryrun) => {
     fail("There was a problem importing your config");
   }
 
-  createPackageJsons();
+  createPackageJsons(isDryrun);
 };
 
 const handleNew = (config, isDryrun) => {
