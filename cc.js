@@ -1,9 +1,10 @@
 /* Leandro Silva (https://grafluxe.com) */
 
-const { argv, cwd, exit } = require("process");
+const { argv, cwd, exit, stdin, stdout } = require("process");
 const { execSync } = require("child_process");
 const { randomUUID } = require("crypto");
 const { readFileSync, writeFileSync, readdirSync, rmSync } = require("fs");
+const { createInterface } = require("readline/promises");
 
 const validOpts = {
   "-l": "list",
@@ -131,6 +132,52 @@ const createPackageJsons = (isDryrun) => {
   } catch {}
 };
 
+const interactiveImport = async (configBranches) => {
+  const reader = createInterface({ input: stdin, output: stdout });
+  const opts = `
+  y - Yes
+  n - No
+  u - Undo previous choice
+  q - Quit
+  ? - Help
+  `;
+
+  console.log("Import Configs [y,n,u,q,?]\n");
+
+  const recursiveAsk = async (index = 0, keep = []) => {
+    for (let i = index; i < configBranches.length; i++) {
+      const config = configBranches[i];
+      const ans = await reader.question(`• ${config}? `);
+
+      switch (ans) {
+        case "y":
+          keep.push(config);
+          break;
+        case "n":
+          break;
+        case "u":
+          keep.splice(i - 1, 1);
+          return recursiveAsk(i > 0 ? i - 1 : 0, keep);
+        case "q":
+          reader.close();
+          return [];
+        case "?":
+        default:
+          await reader.question(opts);
+          return recursiveAsk(i, keep);
+      }
+    }
+
+    return keep;
+  };
+
+  const selectedConfigs = await recursiveAsk();
+
+  reader.close();
+
+  return selectedConfigs;
+};
+
 const handleList = (isDryrun) => {
   const importList = run("git branch", isDryrun)
     .replace(/^(?!\s*config\/).+/gm, "")
@@ -140,22 +187,40 @@ const handleList = (isDryrun) => {
   console.log(`\nAvailable Configs\n=================\n${importList}\n`);
 };
 
-const handleImport = (configs, isDryrun) => {
+const handleImport = async (configs, isDryrun) => {
   try {
-    const configBranches = run("git branch", isDryrun)
+    const isInteractiveMode = configs.length === 0;
+
+    const configBranches = run("git branch", false)
       .replace(/^(?!\s*config\/).+|^\s*config\//gm, "")
       .trim()
       .split("\n");
 
-    const isValidConfig = configs.every((config) =>
+    if (isDryrun) {
+      console.log("\nExecutable\n==========\ngit branch\n");
+
+      if (isInteractiveMode) {
+        console.log("\nInteractive Mode\n================\n");
+      }
+    }
+
+    const configsToImport = isInteractiveMode
+      ? await interactiveImport(configBranches)
+      : configs;
+
+    if (configsToImport.length === 0) {
+      return;
+    }
+
+    const isValidConfig = configsToImport.every((config) =>
       configBranches.includes(config)
     );
 
-    if (!isValidConfig && !isDryrun) {
+    if (!isValidConfig) {
       fail("You're trying to import a config which does not exist");
     }
 
-    configs.forEach((config) => {
+    configsToImport.forEach((config) => {
       run(
         `git merge --allow-unrelated-histories -m "Add configs" config/${config}`,
         isDryrun
